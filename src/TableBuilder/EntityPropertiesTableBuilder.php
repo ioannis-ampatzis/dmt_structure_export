@@ -19,7 +19,7 @@ class EntityPropertiesTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildHeader() {
+  public function buildHeader($light_version = FALSE) {
     $header = [
       // Entity data.
       'entity' => dt('Entity type'),
@@ -33,15 +33,22 @@ class EntityPropertiesTableBuilder extends TableBuilder {
       'property_translatable' => dt('Property translatable'),
       'property_required' => dt('Property required'),
       // Field data.
-      'property_field' => dt('Is field?'),
-      'property_field_type' => dt('Field Type'),
-      'property_field_module' => dt('Field module'),
       'property_field_cardinality' => dt('Field cardinality'),
       // Property data.
       // This property was requested to be placed as the last column and be
       // renamed from "Property count" to "Count of Populated fields".
       'property_count' => dt('Count of Populated fields'),
     ];
+    // Extra field data.
+    if ((bool) $light_version !== TRUE) {
+      // Extra field data.
+      $extra_field_data = [
+        'property_field' => dt('Is field?'),
+        'property_field_type' => dt('Field Type'),
+        'property_field_module' => dt('Field module'),
+      ];
+      $header = array_merge($header, $extra_field_data);
+    }
 
     $this->setHeader($header);
   }
@@ -49,7 +56,7 @@ class EntityPropertiesTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRows() {
+  public function buildRows($light_version = FALSE) {
     $rows = $this->buildEntityRows() ?: [];
     $rows = $this->flattenRows($rows);
 

@@ -20,7 +20,7 @@ class TaxonomyTermsTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildHeader() {
+  public function buildHeader($light_version = FALSE) {
     $header = [
       'machine_name' => dt('Vocabulary'),
       'tid' => dt('Term ID'),
@@ -38,7 +38,7 @@ class TaxonomyTermsTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRows() {
+  public function buildRows($light_version = FALSE) {
     // Build the query.
     $query = db_select('taxonomy_term_data', 'term', ['fetch' => \PDO::FETCH_ASSOC]);
     $query->innerJoin('taxonomy_vocabulary', 'voc', 'term.vid = voc.vid');

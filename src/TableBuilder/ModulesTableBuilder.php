@@ -10,7 +10,7 @@ class ModulesTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildHeader() {
+  public function buildHeader($light_version = FALSE) {
     $header = [
       'package' => dt('Package'),
       'machine_name' => dt('Machine name'),
@@ -27,7 +27,7 @@ class ModulesTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRows() {
+  public function buildRows($light_version = FALSE) {
     $rows = [];
     $extensions = drush_get_extensions(FALSE);
     uasort($extensions, '_drush_pm_sort_extensions');

@@ -12,7 +12,7 @@ class EntityBundlesTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildHeader() {
+  public function buildHeader($light_version = FALSE) {
     $header = [
       'entity' => dt('Entity type'),
       'entity_count' => dt('Entity count'),
@@ -31,7 +31,7 @@ class EntityBundlesTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRows() {
+  public function buildRows($light_version = FALSE) {
     $rows = [];
     $entity_info = entity_get_info();
 

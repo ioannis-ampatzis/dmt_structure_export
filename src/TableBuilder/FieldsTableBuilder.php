@@ -12,7 +12,7 @@ class FieldsTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildHeader() {
+  public function buildHeader($light_version = FALSE) {
     $header = [
       'field_id' => dt('Field ID'),
       'field_name' => dt('Field name'),
@@ -29,7 +29,7 @@ class FieldsTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRows() {
+  public function buildRows($light_version = FALSE) {
     $rows = [];
     $fields = field_info_fields();
     foreach ($fields as $field_id => $field_info) {

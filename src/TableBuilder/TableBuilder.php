@@ -90,8 +90,12 @@ abstract class TableBuilder implements TableBuilderInterface {
 
   /**
    * Builds the table to export.
+   *
+   * @param bool $light_version
+   *   Defines whether all fields will exported or only a pre-selected number of
+   *   fields.
    */
-  public function buildTable() {
+  public function buildTable($light_version = FALSE) {
     $table = [];
     if (!empty($this->getHeader())) {
       $table[] = $this->getHeader();
@@ -104,9 +108,13 @@ abstract class TableBuilder implements TableBuilderInterface {
 
   /**
    * Builds the header, the rows and the table.
+   *
+   * @param bool $light_version
+   *   Defines whether all fields will exported or only a pre-selected number of
+   *   fields.
    */
-  public function build() {
-    $this->buildHeader();
+  public function build($light_version = FALSE) {
+    $this->buildHeader($light_version);
     $this->buildRows();
     $this->buildTable();
   }

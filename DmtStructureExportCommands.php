@@ -56,7 +56,7 @@ class DmtStructureExportCommands extends DrushCommands {
    * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
    *   The data as RowsOfFields.
    */
-  public function export($export_type, array $options = ['format' => 'csv']) {
+  public function export($export_type, array $options = ['format' => 'csv', 'light_version' => FALSE]) {
     try {
       $this->init();
       $manager = new TableBuilderManager();
@@ -83,7 +83,7 @@ class DmtStructureExportCommands extends DrushCommands {
    *
    * @bootstrap DRUSH_BOOTSTRAP_DRUPAL_FULL
    */
-  public function exportAll(array $options = ['destination' => '', 'format' => 'csv']) {
+  public function exportAll(array $options = ['destination' => '', 'format' => 'csv', 'light_version' => FALSE]) {
     $this->init();
     $dst_dir = $this->getDestinationDirectory($options['destination']);
     $manager = new TableBuilderManager();
@@ -92,7 +92,7 @@ class DmtStructureExportCommands extends DrushCommands {
     foreach ($exports as $export_type => $table_builder) {
       try {
         // Build table.
-        $table_builder->build();
+        $table_builder->build($options['light_version']);
         $data = new RowsOfFields($table_builder->getTable());
         // Write to CSV.
         $file_path = $dst_dir . '/' . $export_type . '.csv';
