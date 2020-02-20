@@ -39,6 +39,37 @@ class EntityPropertiesTableBuilder extends TableBuilder {
   protected $entityFieldManager;
 
   /**
+   * A list of pre-defined 'node' fields and field properties to skip.
+   *
+   * @var array
+   */
+  protected $excluded_fields = [
+    'node' => [
+      'body/format',
+      'body/summary',
+      'changed',
+      'content_translation_outdated',
+      'content_translation_source',
+      'created',
+      'default_langcode',
+      'nid',
+      'oe_subject/format',
+      'oe_summary/format',
+      'oe_teaser/format',
+      'promote',
+      'revision_default',
+      'revision_log',
+      'revision_translation_affected',
+      'revision_uid',
+      'status',
+      'sticky',
+      'uid',
+      'version',
+      'vid',
+    ],
+  ];
+
+  /**
    * EntityPropertiesTableBuilder constructor.
    *
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
@@ -50,7 +81,11 @@ class EntityPropertiesTableBuilder extends TableBuilder {
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager service.
    */
-  public function __construct(ContainerInterface $container, EntityTypeManagerInterface $entityTypeManager, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager) {
+  public function __construct(
+    ContainerInterface $container,
+    EntityTypeManagerInterface $entityTypeManager,
+    EntityTypeBundleInfoInterface $entity_type_bundle_info,
+    EntityFieldManagerInterface $entity_field_manager) {
     parent::__construct($container);
     $this->entityTypeManager = $entityTypeManager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
@@ -72,7 +107,7 @@ class EntityPropertiesTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  protected function buildHeader() {
+  protected function buildHeader($light_version = NULL) {
     $this->header = [
       // Entity data.
       'entity' => dt('Entity type'),
@@ -87,78 +122,89 @@ class EntityPropertiesTableBuilder extends TableBuilder {
       'property_required' => dt('Property required'),
       'property_count' => dt('Property count'),
       // Field data.
-      'property_field' => dt('Is field?'),
-      'property_field_type' => dt('Field Type'),
-      'property_field_module' => dt('Field module'),
       'property_field_cardinality' => dt('Field cardinality'),
     ];
+    if ((bool) $light_version !== TRUE) {
+      // Extra field data.
+      $extra_field_data = [
+        'property_field' => dt('Is field?'),
+        'property_field_type' => dt('Field Type'),
+        'property_field_module' => dt('Field module'),
+      ];
+      $this->header = array_merge($this->header, $extra_field_data);
+    }
+
     return $this->header;
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function buildRows() {
+  protected function buildRows($light_version = NULL) {
     $this->rows = [];
-    $rows = $this->buildEntityRows();
+    $rows = $this->buildEntityRows($light_version);
     $this->rows = $this->flattenRows($rows);
+
     return $this->rows;
   }
 
   /**
    * Builds all entity rows.
    */
-  protected function buildEntityRows() {
+  protected function buildEntityRows($light_version = NULL) {
     $row = [];
     $entity_definitions = $this->entityTypeManager->getDefinitions();
     foreach ($entity_definitions as $entity_type => $entity_definition) {
-      $row[$entity_type] = $this->buildEntityRow($entity_type);
+      $row[$entity_type] = $this->buildEntityRow($entity_type, $light_version);
     }
+
     return $row;
   }
 
   /**
    * Builds an entity row.
    */
-  protected function buildEntityRow($entity_type) {
+  protected function buildEntityRow($entity_type, $light_version = NULL) {
     $row = [];
     $row['entity'] = $entity_type;
     $row['entity_count'] = Utilities::getEntityDataCount($entity_type);
-    $row['bundles'] = $this->buildEntityBundleRows($entity_type);
+    $row['bundles'] = $this->buildEntityBundleRows($entity_type, $light_version);
+
     return $row;
   }
 
   /**
    * Builds all entity bundle rows.
    */
-  protected function buildEntityBundleRows($entity_type) {
+  protected function buildEntityBundleRows($entity_type, $light_version = NULL) {
     $row = [];
     $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
     foreach ($bundles as $bundle_id => $bundle_label) {
-      $row[$bundle_id] = $this->buildEntityBundleRow($entity_type, $bundle_id);
+      $row[$bundle_id] = $this->buildEntityBundleRow($entity_type, $bundle_id, $light_version);
     }
+
     return $row;
   }
 
   /**
    * Builds an entity bundle row.
    */
-  protected function buildEntityBundleRow($entity_type, $bundle_id) {
+  protected function buildEntityBundleRow($entity_type, $bundle_id, $light_version = NULL) {
     $row = [];
     $row['bundle'] = $bundle_id;
     $row['bundle_count'] = Utilities::getEntityDataCount($entity_type, $bundle_id);
-    $row['bundle_properties'] = $this->buildEntityBundlePropertyRows($entity_type, $bundle_id);
+    $row['bundle_properties'] = $this->buildEntityBundlePropertyRows($entity_type, $bundle_id, $light_version);
+
     return $row;
   }
 
   /**
    * Builds all entity bundle properties rows.
    */
-  protected function buildEntityBundlePropertyRows($entity_type, $bundle_id) {
+  protected function buildEntityBundlePropertyRows($entity_type, $bundle_id, $light_version = NULL) {
     $row = [];
     $entity_definitions = $this->entityTypeManager->getDefinitions();
     $entity_definition = $entity_definitions[$entity_type];
-
     if ($entity_definition->entityClassImplements(FieldableEntityInterface::class)) {
       $fields = $this->entityFieldManager->getFieldDefinitions($entity_type, $bundle_id);
       foreach ($fields as $field) {
@@ -166,11 +212,16 @@ class EntityPropertiesTableBuilder extends TableBuilder {
         if ($field->isComputed()) {
           continue;
         }
-
         $field_storage = $field->getFieldStorageDefinition();
         $field_name = $field->getName();
         $field_entity_type = $field->getTargetEntityTypeId();
-
+        // If a light version has to be extracted, skip a list of pre-defined
+        // fields.
+        if((bool) $light_version === TRUE) {
+          if ($entity_type === 'node' && in_array($field_name, $this->excluded_fields['node'])) {
+            continue;
+          }
+        }
         $property_row = [];
         $property_row['property_id'] = $field_name;
         $property_row['property_label'] = $field->getLabel();
@@ -180,29 +231,30 @@ class EntityPropertiesTableBuilder extends TableBuilder {
         $is_field = $field_storage instanceof FieldStorageConfigInterface;
         $property_row['property_field'] = $is_field ? 'TRUE' : 'FALSE';
         $property_row['property_field_type'] = $field->getType();
-
         if ($is_field) {
           $property_row['property_field_module'] = $field_storage->getTypeProvider();
         }
-
         $cardinality = $field_storage->getCardinality();
         $property_row['property_field_cardinality'] = $cardinality === FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED ? 'UNLIMITED' : $cardinality;
-
         $field_columns = $field_storage->getColumns();
         foreach ($field_columns as $field_column => $field_column_info) {
           $property_column_row = $property_row;
           $property_column_row['property_type'] = $field_column_info['type'];
-
           if (count($field_columns) > 1) {
             $property_column_row['property_id'] = count($field_columns) > 1 ? $field_name . '/' . $field_column : $field_name;
             $property_column_row['property_label'] = $field->getLabel() . ' / ' . $field_column;
+            // If a light version has to be extracted, skip a list of
+            // pre-defined field properties.
+            if((bool) $light_version === TRUE) {
+              if ($entity_type === 'node' && in_array($property_column_row['property_id'], $this->excluded_fields['node'])) {
+                continue;
+              }
+            }
           }
-
           if (!$field_storage->hasCustomStorage()) {
             $field_condition = $field_name . '.' . $field_column;
             $property_column_row['property_count'] = Utilities::getEntityPropertyDataCount($field_entity_type, $field_condition, $bundle_id);
           }
-
           $row[$field_name . '.' . $field_column] = $property_column_row;
         }
       }
@@ -214,9 +266,8 @@ class EntityPropertiesTableBuilder extends TableBuilder {
           if (!in_array($property, [
             '_core',
             'third_party_settings',
-            'dependencies',
-            'status',
-          ])) {
+            'dependencies', 'status',
+            ])) {
             $property_row = [];
             $property_row['property_id'] = $property;
             $property_row['property_label'] = $property;
@@ -237,6 +288,7 @@ class EntityPropertiesTableBuilder extends TableBuilder {
     foreach ($rows as $row) {
       $this->flattenRow($row, $result);
     }
+
     return $result;
   }
 
@@ -257,11 +309,9 @@ class EntityPropertiesTableBuilder extends TableBuilder {
         $nested_array_keys[] = $key;
       }
     }
-
     if (!empty($new_row)) {
       $result[] = $new_row;
     }
-
     if (!empty($nested_array_keys)) {
       foreach ($nested_array_keys as $key) {
         $this->flattenRow($row[$key], $result);

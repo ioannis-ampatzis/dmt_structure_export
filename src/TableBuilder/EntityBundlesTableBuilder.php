@@ -48,7 +48,11 @@ class EntityBundlesTableBuilder extends TableBuilder {
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info service.
    */
-  public function __construct(ContainerInterface $container, ModuleHandlerInterface $moduleHandler, EntityTypeManagerInterface $entityTypeManager, EntityTypeBundleInfoInterface $entity_type_bundle_info) {
+  public function __construct(
+    ContainerInterface $container,
+    ModuleHandlerInterface $moduleHandler,
+    EntityTypeManagerInterface $entityTypeManager,
+    EntityTypeBundleInfoInterface $entity_type_bundle_info) {
     parent::__construct($container);
     $this->moduleHandler = $moduleHandler;
     $this->entityTypeManager = $entityTypeManager;
@@ -70,7 +74,7 @@ class EntityBundlesTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  protected function buildHeader() {
+  protected function buildHeader($light_version = NULL) {
     $this->header = [
       'entity' => dt('Entity type'),
       'entity_count' => dt('Entity count'),
@@ -82,26 +86,24 @@ class EntityBundlesTableBuilder extends TableBuilder {
       'revisions_enabled' => dt('Revisions enabled'),
       'moderation_enabled' => dt('Content moderation enabled'),
     ];
+
     return $this->header;
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function buildRows() {
+  protected function buildRows($light_version = NULL) {
     $this->rows = [];
-
     $entity_definitions = $this->entityTypeManager->getDefinitions();
     foreach ($entity_definitions as $entity_type => $entity_definition) {
       $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
       $bundle_key = $entity_definition->getKey('bundle');
       $has_bundles = !empty($bundles) && count($bundles) > 1 && !empty($bundle_key);
-
       $entity_row = [
         'entity' => $entity_definition->getLabel() . ' (' . $entity_type . ')',
         'entity_count' => Utilities::getEntityDataCount($entity_type),
       ];
-
       if (!$has_bundles) {
         // Multilingual settings.
         $translation_enabled = $this->isContentTranslationEnabled($entity_type);
@@ -113,16 +115,12 @@ class EntityBundlesTableBuilder extends TableBuilder {
         // Content moderation settings.
         $moderation_enabled = !empty(array_column($bundles, 'workflow'));
         $entity_row['moderation_enabled'] = $moderation_enabled ? 'TRUE' : 'FALSE';
-
         // Revision settings.
         $entity_row['revisions_enabled'] = $moderation_enabled || $entity_definition->hasKey('revision') ? 'TRUE' : 'FALSE';
-
         // Comment settings.
         $entity_row['comment_settings'] = $this->getCommentSettings($entity_type);
       }
-
       $this->rows[] = $entity_row;
-
       // Process bundles.
       if ($has_bundles) {
         foreach ($bundles as $bundle_id => $bundle_info) {
@@ -130,24 +128,19 @@ class EntityBundlesTableBuilder extends TableBuilder {
             'bundle' => $bundle_info['label'] . ' (' . $bundle_id . ')',
             'bundle_count' => Utilities::getEntityDataCount($entity_type, $bundle_id),
           ];
-
           // Multilingual settings.
           $translation_enabled = $this->isContentTranslationEnabled($entity_type, $bundle_id);
           $bundle_row['multilingual_enabled'] = $translation_enabled ? 'TRUE' : 'FALSE';
           if ($translation_enabled) {
             $bundle_row['multilingual_type'] = $this->t('Enabled, with field translation (content_translation)');
           }
-
           // Content moderation settings.
           $moderation_enabled = !empty($bundle_info['workflow']);
           $bundle_row['moderation_enabled'] = $moderation_enabled ? 'TRUE' : 'FALSE';
-
           // Revision settings.
           $bundle_row['revisions_enabled'] = $moderation_enabled || $entity_definition->hasKey('revision') ? 'TRUE' : 'FALSE';
-
           // Comment settings.
           $bundle_row['comment_settings'] = $this->getCommentSettings($entity_type, $bundle_id);
-
           $this->rows[] = $bundle_row;
         }
       }
@@ -163,10 +156,10 @@ class EntityBundlesTableBuilder extends TableBuilder {
     if (!$this->moduleHandler->moduleExists('content_translation')) {
       return FALSE;
     }
+     /** @var \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager */
+     $content_translation_manager = $this->container->get('content_translation.manager');
 
-    /** @var \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager */
-    $content_translation_manager = $this->container->get('content_translation.manager');
-    return $content_translation_manager->isEnabled($entity_type, $bundle);
+     return $content_translation_manager->isEnabled($entity_type, $bundle);
   }
 
   /**
@@ -176,12 +169,10 @@ class EntityBundlesTableBuilder extends TableBuilder {
     if (!$this->moduleHandler->moduleExists('comment')) {
       return;
     }
-
     $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
     if (!$entity_type_definition->entityClassImplements(FieldableEntityInterface::class)) {
       return;
     }
-
     /** @var \Drupal\Core\Entity\EntityFieldManager $entity_field_manager */
     $entity_field_manager = $this->container->get('entity_field.manager');
     $entity_fields = $entity_field_manager->getFieldDefinitions($entity_type, $bundle);
@@ -190,7 +181,6 @@ class EntityBundlesTableBuilder extends TableBuilder {
       CommentItemInterface::CLOSED => $this->t('Closed'),
       CommentItemInterface::OPEN => $this->t('Open'),
     ];
-
     $comment_manager = $this->container->get('comment.manager');
     $comment_fields = $comment_manager->getFields($entity_type);
     $comment_settings = [];

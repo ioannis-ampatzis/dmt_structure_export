@@ -27,7 +27,9 @@ class FieldsTableBuilder extends TableBuilder {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
-  public function __construct(ContainerInterface $container, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(
+    ContainerInterface $container,
+    EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct($container);
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -45,7 +47,7 @@ class FieldsTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  protected function buildHeader() {
+  protected function buildHeader($light_version = NULL) {
     $this->header = [
       'field_id' => dt('Field ID'),
       'field_name' => dt('Field name'),
@@ -57,17 +59,16 @@ class FieldsTableBuilder extends TableBuilder {
       'field_count' => dt('Field count'),
       'field_used_in' => dt('Used in'),
     ];
+
     return $this->header;
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function buildRows() {
+  protected function buildRows($light_version = NULL) {
     $this->rows = [];
-
     $field_storage_configs = $this->entityTypeManager->getStorage('field_storage_config')->loadMultiple();
-
     /** @var \Drupal\field\FieldStorageConfigInterface $field_storage */
     foreach ($field_storage_configs as $field_storage) {
       $row = [];
@@ -86,7 +87,6 @@ class FieldsTableBuilder extends TableBuilder {
       $field_condition .= !empty($column) ? ".$column" : '';
       $row['field_count'] = Utilities::getEntityPropertyDataCount($field_entity_type, $field_condition);
       $row['field_used_in'] = implode(', ', $field_storage->getBundles());
-
       $this->rows[] = $row;
     }
 

@@ -35,7 +35,10 @@ class ModulesTableBuilder extends TableBuilder {
    * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
    *   The theme handler.
    */
-  public function __construct(ContainerInterface $container, ModuleExtensionList $module_extension_list, ThemeHandlerInterface $theme_handler) {
+  public function __construct(
+    ContainerInterface $container,
+    ModuleExtensionList $module_extension_list,
+    ThemeHandlerInterface $theme_handler) {
     parent::__construct($container);
     $this->moduleExtensionList = $module_extension_list;
     $this->themeHandler = $theme_handler;
@@ -55,7 +58,7 @@ class ModulesTableBuilder extends TableBuilder {
   /**
    * {@inheritdoc}
    */
-  protected function buildHeader() {
+  protected function buildHeader($light_version = NULL) {
     $this->header = [
       'package' => $this->t('Package'),
       'machine_name' => $this->t('Machine name'),
@@ -66,19 +69,18 @@ class ModulesTableBuilder extends TableBuilder {
       'version' => $this->t('Version'),
       'description' => $this->t('Description'),
     ];
+
     return $this->header;
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function buildRows() {
+  protected function buildRows($light_version = NULL) {
     $this->rows = [];
-
     $modules = $this->moduleExtensionList->reset()->getList();
     $themes = $this->themeHandler->rebuildThemeData();
     $both = array_merge($modules, $themes);
-
     /** @var \Drupal\Core\Extension\Extension $extension */
     foreach ($both as $key => $extension) {
       $this->rows[$key] = [

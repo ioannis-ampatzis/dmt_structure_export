@@ -58,12 +58,13 @@ class DmtStructureExportCommands extends DrushCommands {
    * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
    *   The data as RowsOfFields.
    */
-  public function export($export_type, array $options = ['format' => 'csv']) {
+  public function export($export_type, array $options = ['format' => 'csv', 'light_version' => NULL]) {
     try {
       $manager = new TableBuilderManager();
       $table_builder = $manager->getTableBuilder($export_type);
-      $table_builder->build();
+      $table_builder->build($options['light_version']);
       $table = $table_builder->getTable();
+
       return new RowsOfFields($table);
     }
     catch (\Exception $e) {
@@ -83,17 +84,15 @@ class DmtStructureExportCommands extends DrushCommands {
    *
    * @bootstrap DRUSH_BOOTSTRAP_DRUPAL_FULL
    */
-  public function exportAll(array $options = ['destination' => '', 'format' => 'csv']) {
+  public function exportAll(array $options = ['destination' => '', 'format' => 'csv', 'light_version' => NULL]) {
     $dst_dir = $this->getDestinationDirectory($options['destination']);
     $manager = new TableBuilderManager();
     $exports = $manager->getTableBuilders();
-
     foreach ($exports as $export_type => $table_builder) {
       try {
         // Build table.
-        $table_builder->build();
+        $table_builder->build($options['light_version']);
         $data = new RowsOfFields($table_builder->getTable());
-
         // Write to CSV.
         $file_path = $dst_dir . '/' . $export_type . '.csv';
         $output = new StreamOutput(fopen($file_path, 'w'));
@@ -130,12 +129,10 @@ class DmtStructureExportCommands extends DrushCommands {
    */
   protected function getDestinationDirectory($destination) {
     $dst_dir = !empty($destination) ? $destination : self::DMT_STRUCTURE_EXPORT_DEFAULT_DIR;
-
     // Handle relative or absolute paths.
     if (strpos($dst_dir, '/') !== 0) {
       $dst_dir = $this->getConfig()->cwd() . '/' . $dst_dir;
     }
-
     // Create the destination dir if needed.
     $fs = new Filesystem();
     if (!$fs->exists($dst_dir)) {

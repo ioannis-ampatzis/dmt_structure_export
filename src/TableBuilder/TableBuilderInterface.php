@@ -36,8 +36,12 @@ interface TableBuilderInterface {
 
   /**
    * Builds the table.
+   *
+   * @param bool $light_version
+   *   Defines whether all fields and field properties will be exported or if a
+   *   list of pre-selected fields and field properties will be skipped.
    */
-  public function build();
+  public function build($light_version = NULL);
 
   /**
    * Gets the complete table (header in first line + rows).

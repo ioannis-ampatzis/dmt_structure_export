@@ -68,11 +68,9 @@ abstract class TableBuilder implements TableBuilderInterface, ContainerInjection
    */
   public function getTable() {
     $table = [];
-
     if (!empty($this->header)) {
       $table[] = $this->header;
     }
-
     if (!empty($this->rows)) {
       $table = array_merge($table, $this->rows);
     }
@@ -83,19 +81,27 @@ abstract class TableBuilder implements TableBuilderInterface, ContainerInjection
   /**
    * {@inheritdoc}
    */
-  public function build() {
-    $this->buildHeader();
-    $this->buildRows();
+  public function build($light_version = NULL) {
+    $this->buildHeader($light_version);
+    $this->buildRows($light_version);
   }
 
   /**
    * Builds the header array.
+   *
+   * @param bool $light_version
+   *   Defines whether all entity properties will be exported or if a list of
+   *   pre-selected properties will be skipped.
    */
-  abstract protected function buildHeader();
+  abstract protected function buildHeader($light_version = NULL);
 
   /**
    * Builds the rows array.
+   *
+   * @param bool $light_version
+   *   Defines whether all fields and field properties will be exported or if a
+   *   list of pre-selected fields and field properties will be skipped.
    */
-  abstract protected function buildRows();
+  abstract protected function buildRows($light_version = NULL);
 
 }
