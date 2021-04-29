@@ -20,39 +20,23 @@ The `dmt-se:export-all` command will run all exports and generate CSV files:
 
 # Installation
 
-The recommended way is to use Composer.
+This Drush tool has to be installed per Drupal instance.
 
-You can install this Drush tool:
+If the installers are not present in composer.json: `composer require composer/installers`
 
-#### Per drupal instance (recommended)
-
-The dmt_structure_export folder should go in `DRUPAL_ROOT/drush/Commands` or `DRUPAL_ROOT/../drush/Commands`
-or `DRUPAL_ROOT/sites/all/drush/Commands`.
-
-Using composer/installers: `composer require composer/installers`
-
-Make sure you have the following in your composer.json's "extra" section:
+Add the following, if not present in the composer.json's "extra" section:
 
     "installer-paths": {
-        ...
         "drush/Commands/{$name}": ["type:drupal-drush"]
     }
     
+Add the following in the composer.json's "repositories" section:
 
-Finally: `composer require ioannis-ampatzis/dmt_structure_export:8.x-1.x-dev`
+    "repositories": {
+        "dmt_migrate":{
+            "type": "vcs",
+            "url": "https://github.com/ioannis-ampatzis/dmt_structure_export"
+        }
+    }
 
-#### Or globally
-
-You can install it in your `~/.drush` folder.
-
-  * Create a `drush-extensions/Commands` folder in `~/.drush`
-  * Copy the [example.drushrc.php file](https://github.com/drush-ops/drush/blob/8.x/examples/example.drushrc.php) to `~/.drush` and rename it to `drushrc.php`
-  * Add and adapt the following:
-    * `$options['include'] = array('/path/to/drush-extensions');`
-  * From `drush-extensions/Commands` run
-
-     ```bash
-     git clone --branch 7.x-1.x https://github.com/ioannis-ampatzis/dmt_structure_export.git
-     cd dmt_structure_export
-     composer install --no-dev
-     ```
+Finally: `composer require ioannis-ampatzis/dmt_structure_export:7.x-1.x-Light-dev
