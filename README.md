@@ -40,3 +40,40 @@ Add the following in the composer.json's "repositories" section:
     }
 
 Finally: `composer require ioannis-ampatzis/dmt_structure_export:7.x-1.x-dev`
+
+Sample of final main composer.json file, for a D7 NextEuropa website:
+
+    {
+        "name": "[WEBSITE_NAME]",
+        "description": "[WEBSITE_DESCRIPTION]",
+        "type": "project",
+        "keywords": ["fpfis", "nexteuropa", "subsite"],
+        "homepage": "[WEBSITE_URL]",
+        "require": {
+            "ec-europa/toolkit": "3.*",
+            "ioannis-ampatzis/dmt_structure_export": "7.x-1.x-dev"
+        },
+        "support": {
+            "email": "[WEBSITE_EMAIL]",
+            "source": "https://github.com/ec-europa/[WEBSITE_REPOSITORY]"
+        },
+        "scripts": {
+            "post-install-cmd": "@toolkit-install",
+            "post-update-cmd": "@toolkit-install",
+            "toolkit-install": "PROJECT=$(pwd) composer run-script toolkit-install -d ./vendor/ec-europa/toolkit"
+        },
+        "require": {
+            "ioannis-ampatzis/dmt_structure_export": "dev-7.x-1.x"
+        },
+        "repositories": {
+            "dmt_migrate":{
+                "type": "vcs",
+                "url": "https://github.com/ioannis-ampatzis/dmt_structure_export"
+            }
+        },
+        "extra": {
+            "installer-paths": {
+                "drush/Commands/{$name}": ["type:drupal-drush"]
+            }
+        }
+    }
