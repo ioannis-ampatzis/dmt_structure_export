@@ -27,6 +27,7 @@ class TableBuilderManager {
       'fields' => '\Drush\dmt_structure_export\TableBuilder\FieldsTableBuilder',
       'modules' => '\Drush\dmt_structure_export\TableBuilder\ModulesTableBuilder',
       'taxonomy_terms' => '\Drush\dmt_structure_export\TableBuilder\TaxonomyTermsTableBuilder',
+      'menu_site_tree_items' => '\Drush\dmt_structure_export\TableBuilder\MenuSiteTreeItemsTableBuilder',
     ];
     foreach ($defaultTableBuilders as $id => $classname) {
       $tableBuilder = new $classname();
