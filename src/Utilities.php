@@ -62,7 +62,7 @@ class Utilities {
    */
   public static function getEntityPropertyDataCount($entity_type, $field, $bundle = NULL) {
     $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
-    if (is_a($entity_storage, '\Drupal\rdf_entity\Entity\RdfEntitySparqlStorage', TRUE)) {
+    if (is_a($entity_storage, '\Drupal\rdf_entity\Entity\RdfEntitySparqlStorage', TRUE) || $entity_type === 'skos_concept' || $entity_type === 'skos_concept_scheme') {
       // Skip for rdf_entity (bug?).
       // TypeError: Return value of Drupal\rdf_entity\RdfGraphHandler::
       // getEntityTypeGraphUris() must be of the type array, null returned
